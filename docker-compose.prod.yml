@@ -1,0 +1,102 @@
+version: '3.8'
+
+# Production overrides — run with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+
+  # ─── PostgreSQL (hardened) ──────────────────────────────────────────────────
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}   # Must be set — no default in prod
+    ports: []                                   # Not exposed externally in prod
+
+  # ─── Redis (hardened) ───────────────────────────────────────────────────────
+  redis:
+    restart: always
+    ports: []
+
+  # ─── Elasticsearch (hardened) ───────────────────────────────────────────────
+  elasticsearch:
+    restart: always
+    environment:
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    ports: []
+
+  # ─── Backend (production — no reload, gunicorn workers) ─────────────────────
+  backend:
+    build:
+      target: production
+    restart: always
+    command: >
+      gunicorn app.main:app
+      --workers 4
+      --worker-class uvicorn.workers.UvicornWorker
+      --bind 0.0.0.0:8000
+      --timeout 120
+      --access-logfile -
+    ports: []                                   # Exposed only via Nginx
+    volumes:
+      - ./models:/app/models:ro                 # Read-only in prod
+    environment:
+      ENVIRONMENT: production
+      SECRET_KEY: ${SECRET_KEY}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+
+  # ─── Celery (production) ─────────────────────────────────────────────────────
+  celery-worker:
+    build:
+      target: production
+    restart: always
+    volumes:
+      - ./models:/app/models:ro
+
+  celery-beat:
+    build:
+      target: production
+    restart: always
+
+  # ─── Frontend (production — served by Nginx, not Vite) ──────────────────────
+  frontend:
+    build:
+      target: production
+    restart: always
+    ports: []
+
+  # ─── Nginx Reverse Proxy (production only) ──────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nyaya-gati-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro         # Mount TLS certs
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - nyaya-gati-network
+
+  # ─── Flower (Celery monitoring — optional in prod) ──────────────────────────
+  flower:
+    image: mher/flower:2.0
+    container_name: nyaya-gati-flower
+    restart: always
+    command: celery flower --broker=${REDIS_URL} --port=5555 --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    networks:
+      - nyaya-gati-network
+
+volumes:
+  nginx_logs:
