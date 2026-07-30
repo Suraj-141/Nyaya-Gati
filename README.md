@@ -8,8 +8,6 @@
 
 > Reducing India's 51 million case judicial backlog through intelligent case filtering and AI-driven prioritization.
 
-![Nyaya-Gati Dashboard Mockup](C:\Users\Suraj\.gemini\antigravity\brain\bec4b2d1-694b-4c22-9353-7111214f4859\nyaya_gati_dashboard_mockup_1778067833270.png)
-
 ## 🎯 Overview
 
 Nyaya-Gati is an end-to-end AI platform designed to address India's judicial pendency crisis by:
