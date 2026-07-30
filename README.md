@@ -136,7 +136,7 @@ nyaya-gati/
 | **Models not loading** | Verify model paths in `.env`. Ensure models are downloaded/trained and located in the `/models` volume. |
 | **Frontend can't reach API** | Verify `VITE_API_URL` is set to `http://localhost:8000/api/v1` (or your public IP). |
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions from legal tech researchers and developers!
 1. Fork the Project.
@@ -151,9 +151,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📧 Contact
 
-**Project Lead**: Suraj - [suraj@example.com](mailto:suraj@example.com)
-**Institution**: New Horizon College of Engineering
-**Project Website**: [https://nyayagati.in](https://nyayagati.in)
+**Project Lead**: Suraj - [surajsudhakar1401@gmail.com](mailto:surajsudhakar1401@gmail.com)
 
----
-*Built with ❤️ to deliver faster justice for a billion people.*
